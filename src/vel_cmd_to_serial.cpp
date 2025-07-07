@@ -31,6 +31,9 @@ public:
             modbus_ctx_ = nullptr;
         } else {
             RCLCPP_INFO(this->get_logger(), "Modbus connection established");
+            
+            // Initialize motor driver
+            initialize_motor_driver();
         }
     }
     
@@ -44,6 +47,43 @@ public:
 private:
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr vel_topic_;
     modbus_t *modbus_ctx_;
+    
+    void initialize_motor_driver()
+    {
+        if (!modbus_ctx_) {
+            RCLCPP_ERROR(this->get_logger(), "Modbus context not available for initialization");
+            return;
+        }
+        
+        // Step 1: Clear any existing faults
+        RCLCPP_INFO(this->get_logger(), "Clearing motor faults...");
+        if (modbus_write_register(modbus_ctx_, 0x200E, 0x0080) == -1) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to clear faults: %s", modbus_strerror(errno));
+            return;
+        }
+        
+        // Small delay between commands
+        rclcpp::sleep_for(std::chrono::milliseconds(100));
+        
+        // Step 2: Prepare for operation
+        RCLCPP_INFO(this->get_logger(), "Preparing motors for operation...");
+        if (modbus_write_register(modbus_ctx_, 0x200E, 0x0006) == -1) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to prepare for operation: %s", modbus_strerror(errno));
+            return;
+        }
+        
+        // Small delay between commands
+        rclcpp::sleep_for(std::chrono::milliseconds(100));
+        
+        // Step 3: Enable the motors
+        RCLCPP_INFO(this->get_logger(), "Enabling motors...");
+        if (modbus_write_register(modbus_ctx_, 0x200E, 0x000F) == -1) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to enable motors: %s", modbus_strerror(errno));
+            return;
+        }
+        
+        RCLCPP_INFO(this->get_logger(), "Motor driver initialized successfully!");
+    }
     
     void vel_callback(const geometry_msgs::msg::Twist msg)
     {
@@ -67,20 +107,26 @@ private:
             return;
         }
         
+        // Convert RPM to motor driver units (ZLAC8015D expects RPM * 10)
+        int16_t left_rpm_cmd = static_cast<int16_t>(vel_l_rpm * 10);
+        int16_t right_rpm_cmd = static_cast<int16_t>(vel_r_rpm * 10);
+        
+        // Convert to unsigned 16-bit hex values
+        uint16_t left_data = static_cast<uint16_t>(left_rpm_cmd);
+        uint16_t right_data = static_cast<uint16_t>(right_rpm_cmd);
+        
         // Write left motor target velocity to register 0x2088
-        uint16_t left_data = static_cast<uint16_t>(vel_l_rpm * 10);
         if (modbus_write_register(modbus_ctx_, 0x2088, left_data) == -1) {
             RCLCPP_ERROR(this->get_logger(), "Failed to write left motor command: %s", modbus_strerror(errno));
         }
         
         // Write right motor target velocity to register 0x2089
-        uint16_t right_data = static_cast<uint16_t>(vel_r_rpm * 10);
         if (modbus_write_register(modbus_ctx_, 0x2089, right_data) == -1) {
             RCLCPP_ERROR(this->get_logger(), "Failed to write right motor command: %s", modbus_strerror(errno));
         }
         
-        RCLCPP_DEBUG(this->get_logger(), "Sent commands - Left: %f RPM (0x%04X), Right: %f RPM (0x%04X)", 
-                    vel_l_rpm/10, left_data, vel_r_rpm/10, right_data);
+        RCLCPP_INFO(this->get_logger(), "Sent commands - Left: %.1f RPM (0x%04X), Right: %.1f RPM (0x%04X)", 
+                    vel_l_rpm, left_data, vel_r_rpm, right_data);
     }
 
 

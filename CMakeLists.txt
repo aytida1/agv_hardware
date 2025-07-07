@@ -7,7 +7,9 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 # Find libmodbus
@@ -26,6 +28,13 @@ target_link_libraries(vel_to_serial ${MODBUS_LIBRARY})
 
 install(TARGETS
   vel_to_serial
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install Python scripts
+install(PROGRAMS
+  src/vel_cmd_to_serial.py
+  src/ZLAC8015D.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
