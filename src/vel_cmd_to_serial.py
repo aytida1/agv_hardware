@@ -26,7 +26,7 @@ class VelToSerial(Node):
         self.tf_broadcaster = TransformBroadcaster(self)
         # self.client = ModbusClient(port='/dev/ttyUSB0', baudrate=115200, timeout=1)
         # self.client.connect()
-        self.motors = ZLAC8015D.Controller(port='/dev/ttyUSB2')
+        self.motors = ZLAC8015D.Controller(port='/dev/ttyUSB1')
 
         self.motors.disable_motor()
 
@@ -36,13 +36,16 @@ class VelToSerial(Node):
         self.motors.set_mode(3)
         self.motors.enable_motor()
 
-        self.odom_frequency
+        
 
         # cmds = [140, 170]
         #cmds = [100, 50]
         #cmds = [150, -100]
         self.odom_timer = 0.1  # Hz
         self.timer = self.create_timer(self.odom_timer, self.timer_callback)
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
@@ -86,7 +89,7 @@ class VelToSerial(Node):
 
     def timer_callback(self):
         rpmL, rpmR = self.motors.get_rpm()
-        radpsL = rpmL*2*math.pi/60
+        radpsL = -rpmL*2*math.pi/60
         radpsR = rpmR*2*math.pi/60
 
         #calculate distance travelled by each wheel
@@ -96,10 +99,11 @@ class VelToSerial(Node):
         delta_distance = (left_distance + right_distance) / 2.0
         delta_theta = (right_distance - left_distance) / self.wheel_dist
 
+
         # update robot's position
-        x += delta_distance * math.cos(theta)
-        y += delta_distance * math.sin(theta)  
-        theta += delta_theta
+        self.x += delta_distance * math.cos(self.theta)
+        self.y += delta_distance * math.sin(self.theta)  
+        self.theta += delta_theta
 
         # calculate linear and angular velocity of the robot
         linear_velocity = (self.wheel_radius / 2) * (radpsL + radpsR)
@@ -110,18 +114,18 @@ class VelToSerial(Node):
         odom_msg.header.stamp = self.get_clock().now().to_msg()
         odom_msg.header.frame_id = 'odom'
         odom_msg.child_frame_id = 'base_link'
-        odom_msg.pose.pose.position.x = x
-        odom_msg.pose.pose.position.y = y
+        odom_msg.pose.pose.position.x = self.x
+        odom_msg.pose.pose.position.y = self.y
 
         # convert theta to quaternion
-        quaternion = self.get_quaternion_from_euler(0, 0, theta)
+        quaternion = self.get_quaternion_from_euler(0, 0, self.theta)
         odom_msg.pose.pose.orientation.x = quaternion[0]
         odom_msg.pose.pose.orientation.y = quaternion[1]
         odom_msg.pose.pose.orientation.z = quaternion[2]
         odom_msg.pose.pose.orientation.w = quaternion[3]
 
         odom_msg.twist.twist.linear.x = linear_velocity
-        odom_msg.twist.twist.linear.y = angular_velocity
+        odom_msg.twist.twist.angular.z = angular_velocity
 
         self.odom_publisher.publish(odom_msg)
 
@@ -131,8 +135,8 @@ class VelToSerial(Node):
         transform.header.frame_id = "odom"
         transform.child_frame_id = "base_link"
 
-        transform.transform.translation.x = x
-        transform.transform.translation.y = y
+        transform.transform.translation.x = self.x
+        transform.transform.translation.y = self.y
         transform.transform.translation.z = 0.0
 
         transform.transform.rotation = odom_msg.pose.pose.orientation

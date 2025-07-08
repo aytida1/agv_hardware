@@ -104,7 +104,7 @@ class Controller:
 		read_success = False
 		reg = [None]*WORD
 		while not read_success:
-			result = self.client.read_holding_registers(ADDR, WORD )
+			result = self.client.read_holding_registers(address=ADDR, count=WORD)
 			try:
 				for i in range(WORD):
 					reg[i] = result.registers[i]
@@ -156,7 +156,7 @@ class Controller:
 
 	def get_fault_code(self):
 
-		fault_codes = self.client.read_holding_registers(self.L_FAULT, 2 )
+		fault_codes = self.client.read_holding_registers(address=self.L_FAULT, count=2)
 
 		L_fault_code = fault_codes.registers[0]
 		R_fault_code = fault_codes.registers[1]
