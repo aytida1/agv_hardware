@@ -12,7 +12,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
-# Find libmodbus
+# # Find libmodbus
 # find_library(MODBUS_LIBRARY modbus)
 # if(NOT MODBUS_LIBRARY)
 #   message(FATAL_ERROR "libmodbus not found")
@@ -20,10 +20,10 @@ find_package(geometry_msgs REQUIRED)
 
 # add_executable(vel_to_serial src/vel_cmd_to_serial.cpp)
 
-# Link ROS2 dependencies
+# # Link ROS2 dependencies
 # ament_target_dependencies(vel_to_serial rclcpp geometry_msgs)
 
-# Link libmodbus
+# # Link libmodbus
 # target_link_libraries(vel_to_serial ${MODBUS_LIBRARY})
 
 # install(TARGETS
