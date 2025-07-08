@@ -11,21 +11,23 @@ class VelToSerial(Node):
         super().__init__('vel_to_serial')
         
         # Robot parameters
-        self.wheel_radius = 0.1  # wheel radius in meters (adjust as needed)
-        self.wheel_dist = 0.5    # distance between wheels in meters (adjust as needed)
+        self.wheel_radius = 0.0525  # wheel radius in meters (adjust as needed)
+        self.wheel_dist = 0.380    # distance between wheels in meters (adjust as needed)
         self.subscription = self.create_subscription(
             Twist,
             'cmd_vel',
             self.cmd_vel_callback,
             10)
+
+        self.odom_publisher = self.
         # self.client = ModbusClient(port='/dev/ttyUSB0', baudrate=115200, timeout=1)
         # self.client.connect()
-        self.motors = ZLAC8015D.Controller(port='/dev/ttyUSB0')
+        self.motors = ZLAC8015D.Controller(port='/dev/ttyUSB2')
 
         self.motors.disable_motor()
 
-        self.motors.set_accel_time(1000,1000)
-        self.motors.set_decel_time(1000,1000)
+        self.motors.set_accel_time(500,500)
+        self.motors.set_decel_time(500,500)
 
         self.motors.set_mode(3)
         self.motors.enable_motor()
@@ -41,12 +43,12 @@ class VelToSerial(Node):
         ang_vel = msg.angular.z
         
         # Calculate left and right wheel velocities
-        l_vel = -(x_vel - ang_vel * self.wheel_dist / 2)
-        r_vel = (x_vel + ang_vel * self.wheel_dist / 2)
+        l_vel = -(x_vel + ang_vel * self.wheel_dist / 2)
+        r_vel = (x_vel - ang_vel * self.wheel_dist / 2)
         
         # Convert velocities to RPM
-        vel_l_rpm = int((l_vel / self.wheel_radius) / (2 * math.pi) * 60.0)
-        vel_r_rpm = int((r_vel / self.wheel_radius) / (2 * math.pi) * 60.0)
+        vel_l_rpm = int((l_vel / (self.wheel_radius * 2 * math.pi)) * 60.0)
+        vel_r_rpm = int((r_vel / (self.wheel_radius * 2 * math.pi)) * 60.0)
         
         # Send motor commands
         self.send_motor_commands(vel_l_rpm, vel_r_rpm)
