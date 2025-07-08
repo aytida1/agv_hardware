@@ -12,21 +12,29 @@ from nav_msgs.msg import Odometry
 class VelToSerial(Node):
     def __init__(self):
         super().__init__('vel_to_serial')
+
+        # Declare parameters with default value
+        self.declare_parameter('namespace', '')
+        self.declare_parameter('serial_port', '/dev/ttyUSB1')
+        
+        # Get parameter values
+        self.namespace = self.get_parameter('namespace').get_parameter_value().string_value
+        self.serial_port = self.get_parameter('serial_port').get_parameter_value().string_value
         
         # Robot parameters
         self.wheel_radius = 0.0525  # wheel radius in meters (adjust as needed)
         self.wheel_dist = 0.38    # distance between wheels in meters (adjust as needed)
         self.subscription = self.create_subscription(
             Twist,
-            'cmd_vel',
+            f"{self.namespace}/cmd_vel",
             self.cmd_vel_callback,
             10)
-        self.odom_publisher = self.create_publisher(Odometry, 'odom', 10)
+        self.odom_publisher = self.create_publisher(Odometry, f"{self.namespace}/odom", 10)
 
         self.tf_broadcaster = TransformBroadcaster(self)
         # self.client = ModbusClient(port='/dev/ttyUSB0', baudrate=115200, timeout=1)
         # self.client.connect()
-        self.motors = ZLAC8015D.Controller(port='/dev/ttyUSB1')
+        self.motors = ZLAC8015D.Controller(port=self.serial_port)
 
         self.motors.disable_motor()
 
@@ -112,8 +120,8 @@ class VelToSerial(Node):
         # create odometry message
         odom_msg = Odometry()
         odom_msg.header.stamp = self.get_clock().now().to_msg()
-        odom_msg.header.frame_id = 'odom'
-        odom_msg.child_frame_id = 'base_link'
+        odom_msg.header.frame_id = f"{self.namespace}/odom"
+        odom_msg.child_frame_id = f"{self.namespace}/base_link"
         odom_msg.pose.pose.position.x = self.x
         odom_msg.pose.pose.position.y = self.y
 
@@ -132,8 +140,8 @@ class VelToSerial(Node):
         # create transform stamped message
         transform = TransformStamped()
         transform.header.stamp = odom_msg.header.stamp  # keep eye on it
-        transform.header.frame_id = "odom"
-        transform.child_frame_id = "base_link"
+        transform.header.frame_id = f"{self.namespace}/odom"
+        transform.child_frame_id = f"{self.namespace}/base_link"
 
         transform.transform.translation.x = self.x
         transform.transform.translation.y = self.y

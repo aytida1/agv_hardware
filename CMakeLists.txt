@@ -40,7 +40,7 @@ install(PROGRAMS
 )
 
 install(DIRECTORY
-        src
+        src, launch
         DESTINATION share/${PROJECT_NAME}/
 )
 
