@@ -15,7 +15,7 @@ class VelToSerial(Node):
 
         # Declare parameters with default value
         self.declare_parameter('namespace', '')
-        self.declare_parameter('serial_port', '/dev/ttyUSB1')
+        self.declare_parameter('serial_port', '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_B003LVFB-if00-port0')
         
         # Get parameter values
         self.namespace = self.get_parameter('namespace').get_parameter_value().string_value

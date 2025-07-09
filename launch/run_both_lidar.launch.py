@@ -16,24 +16,26 @@ def generate_launch_description():
         executable='rplidar_composition',
         name='lidar_right_node',
         parameters=[
-            {'serial_port':'/dev/ttyUSB1'},
+            {'serial_port':'/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_080e9b4db0808f48b24693469eb6cbf6-if00-port0'},
             {'frame_id':f"{namespace}/lidar_right_link"},
             {'topic_name':f"{namespace}/scanR"},
-            {'angle_compensate':'true'},
-            {'scan_mode':'Standard'}
+            {'angle_compensate':True},
+            {'scan_mode':'Standard'},
+            {'serial_baudrate':256000}
         ]
     )
 
     lidar_left_node = Node(
         package='rplidar_ros',
         executable='rplidar_composition',
-        name='lidar_right_node',
+        name='lidar_left_node',
         parameters=[
-            {'serial_port':'/dev/ttyUSB2'},
+            {'serial_port':'/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_8f93963a0a60974ca252da49ac34b133-if00-port0'},
             {'frame_id':f"{namespace}/lidar_left_link"},
             {'topic_name':f"{namespace}/scanL"},
-            {'angle_compensate':'true'},
-            {'scan_mode':'Standard'}
+            {'angle_compensate':True},
+            {'scan_mode':'Standard'},
+            {'serial_baudrate':256000}
         ]
     )
     
@@ -41,6 +43,6 @@ def generate_launch_description():
     
 
     return LaunchDescription([
-        lidar_right_node,
+       lidar_right_node,
         lidar_left_node
     ])
