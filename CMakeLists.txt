@@ -11,6 +11,7 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(tf2_ros)
 
 # # Find libmodbus
@@ -31,6 +32,14 @@ find_package(tf2_ros)
 #   vel_to_serial
 #   DESTINATION lib/${PROJECT_NAME}
 # )
+
+add_executable(scan_merger_v2 src/scan_merger_v2.cpp)
+ament_target_dependencies(scan_merger_v2 rclcpp sensor_msgs geometry_msgs tf2_ros tf2)
+
+install(TARGETS
+  scan_merger_v2
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Install Python scripts
 install(PROGRAMS
