@@ -77,7 +77,7 @@ public:
         );
 
         // merged scan topic with namespace 
-        std::string merged_scan_topic = robot_namespace_ + "/scan";
+        std::string merged_scan_topic = "scan";
 
         merged_scan_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
             merged_scan_topic,
@@ -263,7 +263,7 @@ void ScanMergerV2::process_and_publish_scans(){
     combined_scan.angle_increment = angle_increment_;
     combined_scan.angle_min = angle_min_;
     combined_scan.angle_max = angle_max_;
-    combined_scan.range_min = 0.5;
+    combined_scan.range_min = 0.26;
     combined_scan.range_max = max_range_;
     combined_scan.scan_time = 0.01;  // Faster scan time for reduced latency
     combined_scan.time_increment = 0.0;

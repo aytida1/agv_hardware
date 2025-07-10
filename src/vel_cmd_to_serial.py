@@ -105,7 +105,7 @@ class VelToSerial(Node):
         right_distance = radpsR * self.wheel_radius * self.odom_timer
 
         delta_distance = (left_distance + right_distance) / 2.0
-        delta_theta = (right_distance - left_distance) / self.wheel_dist
+        delta_theta = (-right_distance + left_distance) / self.wheel_dist
 
 
         # update robot's position
