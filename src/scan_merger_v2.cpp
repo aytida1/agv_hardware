@@ -139,8 +139,7 @@ void ScanMergerV2::scan1_callback(const sensor_msgs::msg::LaserScan::SharedPtr m
     scan1_ = msg;
     last_scan1_time_ = msg->header.stamp;
     
-    // Process immediately when scan arrives
-    process_and_publish_scans();
+    
 }
 
 
