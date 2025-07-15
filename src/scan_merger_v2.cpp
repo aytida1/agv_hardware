@@ -1,137 +1,85 @@
-#include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/laser_scan.hpp>
-#include <geometry_msgs/msg/transform_stamped.hpp>
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
+#include "agv_hardware/scan_merger_v2.hpp"
 
-#include <iostream>
-#include <vector>
-#include <chrono>
 #include <cmath>
-#include <mutex>
-#include <memory>
-#include <string>
+#include <limits>
+#include "rclcpp_components/register_node_macro.hpp"
 
 
-class ScanMergerV2 : public rclcpp::Node
+
+ScanMergerV2::ScanMergerV2(const rclcpp::NodeOptions & options) : Node("scan_merger_v2", options), tf_buffer_(get_clock())
 {
-public:
-    //constructor
-    ScanMergerV2() : Node("scan_merger_v2"), tf_buffer_(get_clock())
-    {
-        max_range_ = 12.0f;
-        angle_min_ = -M_PI;
-        angle_max_ = M_PI;
-        angle_increment_ = 0.00348f;
-        num_points_ = static_cast<int>((angle_max_ - angle_min_) / angle_increment_) + 1;
+    max_range_ = 12.0f;
+    angle_min_ = -M_PI;
+    angle_max_ = M_PI;
+    angle_increment_ = 0.00348f;
+    num_points_ = static_cast<int>((angle_max_ - angle_min_) / angle_increment_) + 1;
 
-        std::string node_namespace = get_namespace();    // namespace parameter
+    std::string node_namespace = get_namespace();    // namespace parameter
 
-        // // Keep this piece of code unchanged as requested
-        // this->declare_parameter<std::string>("robot_name", "");
-        // robot_name_ = this->get_parameter("robot_name").as_string();
+    // // Keep this piece of code unchanged as requested
+    // this->declare_parameter<std::string>("robot_name", "");
+    // robot_name_ = this->get_parameter("robot_name").as_string();
 
-        if (node_namespace == "/") {
-            robot_namespace_ = "";
-            base_frame_ = "base_link";
-            lidar_right_frame_ = "/lidar_right_link";
-            lidar_left_frame_ = "/lidar_left_link";
-            scan1_topic_ = "scanR";
-            scan2_topic_ = "scanL";
-        } else {
-            // Remove leading slash and use double namespace format to match TF tree
-            robot_namespace_ = node_namespace.substr(1); // Remove leading slash
-            // robot_namespace_ = robot_namespace;
-            base_frame_ = robot_namespace_ + "/base_link";
-            lidar_right_frame_ =  robot_namespace_ + "/lidar_right_link";
-            lidar_left_frame_ =   robot_namespace_ + "/lidar_left_link";
-            // scan1_topic_ = node_namespace + "/" + "scan1";  // Will be automatically namespaced
-            // scan2_topic_ = node_namespace + "/" + "scan2";  // Will be automatically namespaced
-            scan1_topic_ = "scanR";  // Will be automatically namespaced
-            scan2_topic_ = "scanL";  // Will be automatically namespaced
-        }
-
-        RCLCPP_INFO(this->get_logger(), "Robot name: %s, Namespace: %s", 
-                    robot_name_.c_str(), node_namespace.c_str());
-        RCLCPP_INFO(this->get_logger(), "Using frames - base: %s, lidar_right: %s, lidar_left: %s", 
-                    base_frame_.c_str(), lidar_right_frame_.c_str(), lidar_left_frame_.c_str());
-        
-        RCLCPP_INFO(this->get_logger(), "Subscribing to topics - scan1: %s, scan2: %s", 
-                    scan1_topic_.c_str(), scan2_topic_.c_str());
-
-        // Set TF buffer cache time to handle past transforms
-        tf_buffer_.setUsingDedicatedThread(true);
-
-        lidar1_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            scan1_topic_,
-            rclcpp::SensorDataQoS(),
-            std::bind(&ScanMergerV2::scan1_callback, this, std::placeholders::_1)
-        );
-        
-        lidar2_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            scan2_topic_,
-            rclcpp::SensorDataQoS(),
-            std::bind(&ScanMergerV2::scan2_callback, this, std::placeholders::_1)
-        );
-
-        // merged scan topic with namespace 
-        std::string merged_scan_topic = "scan";
-
-        merged_scan_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
-            merged_scan_topic,
-            rclcpp::SensorDataQoS()
-        );
-
-        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(tf_buffer_, this);
-
-        // Initialize last processed times
-        last_scan1_time_ = rclcpp::Time(0);
-        last_scan2_time_ = rclcpp::Time(0);
-
-        RCLCPP_INFO(this->get_logger(), "ScanMergerV2 Node has been started.😃");
+    if (node_namespace == "/") {
+        robot_namespace_ = "";
+        base_frame_ = "base_link";
+        lidar_right_frame_ = "/lidar_right_link";
+        lidar_left_frame_ = "/lidar_left_link";
+        scan1_topic_ = "scanR";
+        scan2_topic_ = "scanL";
+    } else {
+        // Remove leading slash and use double namespace format to match TF tree
+        robot_namespace_ = node_namespace.substr(1); // Remove leading slash
+        // robot_namespace_ = robot_namespace;
+        base_frame_ = robot_namespace_ + "/base_link";
+        lidar_right_frame_ =  robot_namespace_ + "/lidar_right_link";
+        lidar_left_frame_ =   robot_namespace_ + "/lidar_left_link";
+        // scan1_topic_ = node_namespace + "/" + "scan1";  // Will be automatically namespaced
+        // scan2_topic_ = node_namespace + "/" + "scan2";  // Will be automatically namespaced
+        scan1_topic_ = "scanR";  // Will be automatically namespaced
+        scan2_topic_ = "scanL";  // Will be automatically namespaced
     }
 
-private:
-    void scan1_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
-    void scan2_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
-    std::vector<std::pair<float, float>> laserscan_to_point(const sensor_msgs::msg::LaserScan::SharedPtr scan_msg, std::string lidar_frame);
-    void process_and_publish_scans();
+    RCLCPP_INFO(this->get_logger(), "Robot name: %s, Namespace: %s", 
+                robot_name_.c_str(), node_namespace.c_str());
+    RCLCPP_INFO(this->get_logger(), "Using frames - base: %s, lidar_right: %s, lidar_left: %s", 
+                base_frame_.c_str(), lidar_right_frame_.c_str(), lidar_left_frame_.c_str());
+        
+    RCLCPP_INFO(this->get_logger(), "Subscribing to topics - scan1: %s, scan2: %s", 
+                scan1_topic_.c_str(), scan2_topic_.c_str());
 
-    // initializing pointers and variables
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar1_;
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar2_;
-    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr merged_scan_;
-    
-    // Store latest scans with thread safety
-    sensor_msgs::msg::LaserScan::SharedPtr scan1_;
-    sensor_msgs::msg::LaserScan::SharedPtr scan2_;
-    std::mutex scan_mutex_;
+    // Set TF buffer cache time to handle past transforms
+    tf_buffer_.setUsingDedicatedThread(true);
 
-    tf2_ros::Buffer tf_buffer_;
-    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+    lidar1_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+        scan1_topic_,
+        rclcpp::SensorDataQoS(),
+        std::bind(&ScanMergerV2::scan1_callback, this, std::placeholders::_1)
+    );
+        
+    lidar2_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+        scan2_topic_,
+        rclcpp::SensorDataQoS(),
+        std::bind(&ScanMergerV2::scan2_callback, this, std::placeholders::_1)
+    );
 
-    float max_range_;
-    float angle_min_;
-    float angle_max_;
-    float angle_increment_;
-    int num_points_;
+    // merged scan topic with namespace 
+    std::string merged_scan_topic = "scan";
 
-    
+    merged_scan_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
+        merged_scan_topic,
+        rclcpp::SensorDataQoS()
+    );
 
-    // Track last processed timestamps to avoid duplicate processing
-    rclcpp::Time last_scan1_time_;
-    rclcpp::Time last_scan2_time_;
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(tf_buffer_, this);
 
-    std::string robot_namespace_;
-    std::string robot_name_;
-    std::string base_frame_;
-    std::string lidar_right_frame_;
-    std::string lidar_left_frame_;
-    std::string scan1_topic_;
-    std::string scan2_topic_;
-};
+    // Initialize last processed times
+    last_scan1_time_ = rclcpp::Time(0);
+    last_scan2_time_ = rclcpp::Time(0);
+
+    RCLCPP_INFO(this->get_logger(), "ScanMergerV2 Node has been started.😃");
+}
+
 
 
 void ScanMergerV2::scan1_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
@@ -286,12 +234,5 @@ void ScanMergerV2::process_and_publish_scans(){
     // Publish immediately without any additional delay
     merged_scan_->publish(combined_scan);
 }
-
-
-int main(int argc, char * argv[])
-{
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ScanMergerV2>());
-  rclcpp::shutdown();
-  return 0;
-}
+// If your class is in some namespace then namespace_name::ScanMergerV2 will be used instead ScanMergerV2
+RCLCPP_COMPONENTS_REGISTER_NODE(ScanMergerV2)

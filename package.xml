@@ -9,7 +9,9 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>rclcpp_components</depend>
+  <!-- for composable nodes -->
+  <depend>rclcpp_components</depend>   
+  
   <depend>rclcpp</depend>
   <depend>geometry_msgs</depend>
 

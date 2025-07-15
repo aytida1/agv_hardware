@@ -6,6 +6,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
+find_package(rclcpp_components REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -33,12 +34,26 @@ find_package(tf2_ros)
 #   DESTINATION lib/${PROJECT_NAME}
 # )
 
-add_executable(scan_merger_v2 src/scan_merger_v2.cpp)
-ament_target_dependencies(scan_merger_v2 rclcpp sensor_msgs geometry_msgs tf2_ros tf2)
+add_library(scan_merger_v2_component src/scan_merger_v2.cpp)
+target_include_directories(scan_merger_v2_component PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(scan_merger_v2_component rclcpp_components rclcpp sensor_msgs geometry_msgs tf2_ros tf2)
+
+# Register as composable node and create executable
+rclcpp_components_register_node(
+    scan_merger_v2_component
+    PLUGIN "agv_hardware::ScanMergerV2"  # Replace with your actual class name
+    EXECUTABLE scan_merger_v2
+)
 
 install(TARGETS
-  scan_merger_v2
-  DESTINATION lib/${PROJECT_NAME}
+  scan_merger_v2_component  # Install the component library
+  scan_merger_v2           # Install the executable
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # Install Python scripts
@@ -49,7 +64,7 @@ install(PROGRAMS
 )
 
 install(DIRECTORY
-        launch
+        launch 
         DESTINATION share/${PROJECT_NAME}/
 )
 
