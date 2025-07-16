@@ -33,14 +33,20 @@ def generate_launch_description():
                     {'camera_info_url': f"file://{camera_info_path}"}
                 ],
                 remappings=[('image_raw', f'/{namespace_string}/image_raw'),
-                            ('camera_info', f'/{namespace_string}/camera_info')
+                            ('camera_info', f'/{namespace_string}/camera_info'),
+                            ('image_raw/compressed', f'/{namespace_string}/image_raw/compressed'),
+                            ('image_raw/compressedDepth', f'/{namespace_string}/image_raw/compressedDepth'),
+                            ('image_raw/theora', f'/{namespace_string}/image_raw/theora'),
+                            ('image_raw/zstd', f'/{namespace_string}/image_raw/zstd')
                         ]
             ),
             ComposableNode(
                 package='apriltag_ros',
                 plugin='AprilTagNode',  # You'll need to verify this plugin name
                 name=f'{namespace_string}_apriltag_node', 
-                remappings=[('image_rect', f'/{namespace_string}/image_raw')]
+                remappings=[('image_rect', f'/{namespace_string}/image_raw'),
+                            ('detections', f'/{namespace_string}/detections')
+                        ]
             ),
             ComposableNode(
                 package='agv_hardware',  # Your package name
