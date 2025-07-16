@@ -13,7 +13,9 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(tf2_ros)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(apriltag_msgs REQUIRED)
 
 # # Find libmodbus
 # find_library(MODBUS_LIBRARY modbus)
@@ -34,6 +36,7 @@ find_package(tf2_ros)
 #   DESTINATION lib/${PROJECT_NAME}
 # )
 
+# FOR LASER NODES
 # need to create shared library for composable node
 add_library(scan_merger_v2_component SHARED src/scan_merger_v2.cpp)
 target_include_directories(scan_merger_v2_component PUBLIC
@@ -49,9 +52,27 @@ rclcpp_components_register_node(
     EXECUTABLE scan_merger_v2
 )
 
+# FOR CAMERA NODES
+# need to create shared library for composable node
+add_library(tag_transform_component SHARED src/tag_transform.cpp)
+target_include_directories(tag_transform_component PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(tag_transform_component rclcpp_components rclcpp geometry_msgs tf2_ros tf2 tf2_geometry_msgs apriltag_msgs)
+
+# Register as composable node and create executable
+rclcpp_components_register_node(
+    tag_transform_component
+    PLUGIN "agv_hardware::TagTransformNode"  # Replace with your actual class name
+    EXECUTABLE tag_transform
+)
+
 install(TARGETS
   scan_merger_v2_component  # Install the component library
   scan_merger_v2           # Install the executable
+  tag_transform_component
+  tag_transform
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -65,7 +86,7 @@ install(PROGRAMS
 )
 
 install(DIRECTORY
-        launch 
+        launch config
         DESTINATION share/${PROJECT_NAME}/
 )
 
