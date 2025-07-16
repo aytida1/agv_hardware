@@ -29,10 +29,12 @@ def generate_launch_description():
                 parameters=[
                     {'camera_name': 'default_cam'},
                     {'frame_id': f"{namespace_string}/camera"},
-                    {'video_device': "/dev/video2"},  # Change to scan1 to match scan_merger expectations
+                    {'video_device': "/dev/video0"},  # Change to scan1 to match scan_merger expectations
                     {'camera_info_url': f"file://{camera_info_path}"}
                 ],
-                remappings=[('image_raw', f'/{namespace_string}/image_raw')]
+                remappings=[('image_raw', f'/{namespace_string}/image_raw'),
+                            ('camera_info', f'/{namespace_string}/camera_info')
+                        ]
             ),
             ComposableNode(
                 package='apriltag_ros',
