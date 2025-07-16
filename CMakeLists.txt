@@ -34,7 +34,8 @@ find_package(tf2_ros)
 #   DESTINATION lib/${PROJECT_NAME}
 # )
 
-add_library(scan_merger_v2_component src/scan_merger_v2.cpp)
+# need to create shared library for composable node
+add_library(scan_merger_v2_component SHARED src/scan_merger_v2.cpp)
 target_include_directories(scan_merger_v2_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
@@ -44,7 +45,7 @@ ament_target_dependencies(scan_merger_v2_component rclcpp_components rclcpp sens
 # Register as composable node and create executable
 rclcpp_components_register_node(
     scan_merger_v2_component
-    PLUGIN "agv_hardware::ScanMergerV2"  # Replace with your actual class name
+    PLUGIN "ScanMergerV2"  # Replace with your actual class name
     EXECUTABLE scan_merger_v2
 )
 
