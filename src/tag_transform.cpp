@@ -15,7 +15,7 @@ TagTransformNode::TagTransformNode(const rclcpp::NodeOptions & options) : Node("
         // Parameters for frame names
         this->declare_parameter("base_frame", "map");
         this->declare_parameter("tag_frame", "tag36h11:0");
-        this->declare_parameter("publish_rate", 30.0);
+        this->declare_parameter("publish_rate", 15.0);
         this->declare_parameter("warning_interval", 5.0); // Log warning every 5 seconds
         this->declare_parameter("namespace", "");
         

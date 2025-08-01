@@ -51,15 +51,18 @@ ScanMergerV2::ScanMergerV2(const rclcpp::NodeOptions & options) : Node("scan_mer
     // Set TF buffer cache time to handle past transforms
     tf_buffer_.setUsingDedicatedThread(true);
 
+    rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_sensor_data));
+    qos.reliable();  // Explicitly set RELIABLE
+
     lidar1_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
         scan1_topic_,
-        rclcpp::SensorDataQoS(),
+        qos,
         std::bind(&ScanMergerV2::scan1_callback, this, std::placeholders::_1)
     );
         
     lidar2_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
         scan2_topic_,
-        rclcpp::SensorDataQoS(),
+        qos,
         std::bind(&ScanMergerV2::scan2_callback, this, std::placeholders::_1)
     );
 
@@ -68,7 +71,7 @@ ScanMergerV2::ScanMergerV2(const rclcpp::NodeOptions & options) : Node("scan_mer
 
     merged_scan_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
         merged_scan_topic,
-        rclcpp::SensorDataQoS()
+        qos
     );
 
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(tf_buffer_, this);
@@ -110,7 +113,8 @@ std::vector<std::pair<float, float>> ScanMergerV2::laserscan_to_point(const sens
         geometry_msgs::msg::TransformStamped transform = tf_buffer_.lookupTransform(
             base_frame_,
             lidar_frame,
-            scan_msg->header.stamp,
+            // scan_msg->header.stamp,
+            rclcpp::Time(0), // Request the latest available transform
             rclcpp::Duration::from_seconds(0.1)  // Increased timeout for better reliability
         );
 

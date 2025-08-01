@@ -28,9 +28,12 @@ def generate_launch_description():
                 name=f'{namespace_string}_usb_cam_node',
                 parameters=[
                     {'camera_name': 'default_cam'},
-                    {'frame_id': f"{namespace_string}/camera"},
+                    {'frame_id': f"{namespace_string}/camera_optical_link"},
                     {'video_device': "/dev/video0"},  # Change to scan1 to match scan_merger expectations
-                    {'camera_info_url': f"file://{camera_info_path}"}
+                    {'camera_info_url': f"file://{camera_info_path}"},
+                    {'framerate': 15.0},
+                    {'image_height': 480},
+                    {'image_width': 640}
                 ],
                 remappings=[('image_raw', f'/{namespace_string}/image_raw'),
                             ('camera_info', f'/{namespace_string}/camera_info'),
