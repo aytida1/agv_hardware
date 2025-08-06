@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -18,7 +19,9 @@ class GracefulAlgo(Node):
         self.source_frame = "tag36h11:0"
 
         # dynamic parameters
-        self.declare_parameter('k_one', 'k_two', 'heading_vel')
+        self.declare_parameter('k_one', value=1.0)
+        self.declare_parameter('k_two', value=1.0)
+        self.declare_parameter('heading_vel', value=0.07)
         
         # subscribe to cmd_vel topic 
         topic_name = self.namespace + "/cmd_vel"
