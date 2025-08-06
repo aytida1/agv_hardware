@@ -49,7 +49,7 @@ class VelToSerial(Node):
         # cmds = [140, 170]
         #cmds = [100, 50]
         #cmds = [150, -100]
-        self.odom_timer = 0.1  # Hz
+        self.odom_timer = 0.067  # Hz
         self.timer = self.create_timer(self.odom_timer, self.timer_callback)
         self.x = 0.0
         self.y = 0.0
@@ -89,7 +89,7 @@ class VelToSerial(Node):
         
         # Send motor commands
         self.send_motor_commands(vel_l_rpm, vel_r_rpm)
-        self.get_logger().info(f'Sent RPM commands - Left: {vel_l_rpm:.2f}, Right: {vel_r_rpm:.2f}')
+        # self.get_logger().info(f'Sent RPM commands - Left: {vel_l_rpm:.2f}, Right: {vel_r_rpm:.2f}')
     
     def send_motor_commands(self, vel_l_rpm, vel_r_rpm):
         """Send RPM commands to ZLAC8015D motor controller"""
