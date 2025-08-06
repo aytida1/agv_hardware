@@ -82,6 +82,7 @@ install(TARGETS
 install(PROGRAMS
   src/vel_cmd_to_serial.py
   src/ZLAC8015D.py
+  src/graceful_algo.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
