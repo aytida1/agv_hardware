@@ -51,6 +51,10 @@ class GracefulAlgo(Node):
             )
         except TransformException as ex:
             self.get_logger().error(f"Could not transform {self.source_frame} and {self.target_frame}: {ex}")
+            stop_cmd = Twist()
+            stop_cmd.linear.x = 0.0
+            stop_cmd.angular.z = 0.0
+            self.vel_pub.publish(stop_cmd)
             return
         
         # considering apriltag as origin
@@ -86,8 +90,13 @@ class GracefulAlgo(Node):
 
         # prepare and publish twist message to topic
         cmd = Twist()
-        cmd.linear.x = v
-        cmd.angular.z = omega
+
+        # distance threshold of 0.45
+        if r <= 0.45:
+            cmd.linear.x = 0.0
+        else: 
+            cmd.linear.x = v
+            cmd.angular.z = omega
 
         self.vel_pub.publish(cmd)
 
