@@ -31,7 +31,7 @@ def generate_launch_description():
                     {'frame_id': f"{namespace_string}/camera_optical_link"},
                     {'video_device': "/dev/video0"},  # Change to scan1 to match scan_merger expectations
                     {'camera_info_url': f"file://{camera_info_path}"},
-                    {'framerate': 15.0},
+                    {'framerate': 10.0},
                     {'image_height': 480},
                     {'image_width': 640}
                 ],

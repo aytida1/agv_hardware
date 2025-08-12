@@ -16,12 +16,13 @@ class GracefulAlgo(Node):
         self.namespace = "agv1"
         self.timer_sec = 0.1
         self.target_frame = self.namespace + "/base_link"
-        self.source_frame = "tag36h11:0"
+        self.source_frame = "tag36h11:0_rotated"
 
         # dynamic parameters
         self.declare_parameter('k_one', value=1.0)
         self.declare_parameter('k_two', value=1.0)
         self.declare_parameter('heading_vel', value=0.07)
+        self.declare_parameter('fraction', value=0.7)
         
         # subscribe to cmd_vel topic 
         topic_name = self.namespace + "/cmd_vel"
@@ -37,6 +38,8 @@ class GracefulAlgo(Node):
 
         # create a timer to call a get_transform method
         self.timer = self.create_timer(self.timer_sec, self.graceful_method)
+
+        self.yaw_prev = 0.0
 
     
     # Main method to calculate angular velocity
@@ -54,14 +57,18 @@ class GracefulAlgo(Node):
             stop_cmd = Twist()
             stop_cmd.linear.x = 0.0
             stop_cmd.angular.z = 0.0
-            self.vel_pub.publish(stop_cmd)
+            # self.vel_pub.publish(stop_cmd)
             return
         
         # considering apriltag as origin
         x = t.transform.translation.x
         y = t.transform.translation.y
         q = t.transform.rotation
-        yaw = math.atan2(2.0*(q.w*q.z + q.x*q.y), 1.0 - 2.0*(q.y*q.y + q.z*q.z))
+
+        fraction = self.get_parameter('fraction').get_parameter_value().double_value
+
+        yaw = fraction*math.atan2(2.0*(q.w*q.z + q.x*q.y), 1.0 - 2.0*(q.y*q.y + q.z*q.z)) + (1 - fraction)*self.yaw_prev
+        self.yaw_prev = yaw
 
         # th(theta) : angle between common line and x axis of apriltag
         th = -1.0*math.atan2(y, x)
@@ -88,11 +95,13 @@ class GracefulAlgo(Node):
         omega = -1.0*(part1 + part2)*v/r
         ###################################################################
 
+        self.get_logger().info(f"omega: {round(omega,3)}, r: {round(r,3)}, yaw: {round(yaw,3)}, theta: {round(th,3)}, delta: {round(dl,3)}")
+
         # prepare and publish twist message to topic
         cmd = Twist()
 
         # distance threshold of 0.45
-        if r <= 0.45:
+        if r <= 0.50:
             cmd.linear.x = 0.0
         else: 
             cmd.linear.x = v

@@ -9,18 +9,21 @@ TagTransformNode::TagTransformNode(const rclcpp::NodeOptions & options) : Node("
     // Initialize TF2 buffer and listener
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+    tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
         
         
         
         // Parameters for frame names
-        this->declare_parameter("base_frame", "/agv1/base_link");
+        this->declare_parameter("base_frame", "map");
         this->declare_parameter("tag_frame", "tag36h11:0");
-        this->declare_parameter("publish_rate", 15.0);
+        this->declare_parameter("tag_frame_rotated", "tag36h11:0_rotated");
+        this->declare_parameter("publish_rate", 10.0);
         this->declare_parameter("warning_interval", 5.0); // Log warning every 5 seconds
         this->declare_parameter("namespace", "");
         
         base_frame_ = this->get_parameter("base_frame").as_string();
         tag_frame_ = this->get_parameter("tag_frame").as_string();
+        tag_frame_rotated_ = this->get_parameter("tag_frame_rotated").as_string();
         warning_interval_ = this->get_parameter("warning_interval").as_double();
         namespace_param = this->get_parameter("namespace").as_string();
         
@@ -44,10 +47,32 @@ void TagTransformNode::publish_transform()
 {
     try
     {
+        // publish static transform publisher between tag_frame and tag_frame_rotated
+        geometry_msgs::msg::TransformStamped tag_;
+        tag_.header.stamp = this->get_clock()->now();
+        tag_.header.frame_id = tag_frame_;
+        tag_.child_frame_id = tag_frame_rotated_;
+
+        tag_.transform.translation.x = 0.0;
+        tag_.transform.translation.y = 0.0;
+        tag_.transform.translation.z = 0.0;
+        tf2::Quaternion q;
+        q.setRPY(-1.5708, 1.57, 0.0);  // roll, pitch and yaw
+        tag_.transform.rotation.x = q.x();
+        tag_.transform.rotation.y = q.y();
+        tag_.transform.rotation.z = q.z();
+        tag_.transform.rotation.w = q.w();
+
+        tf_static_broadcaster_->sendTransform(tag_);
+
+
+
+
+
         // Get transform from base_link to tag
         geometry_msgs::msg::TransformStamped transform_stamped;
             transform_stamped = tf_buffer_->lookupTransform(
-                base_frame_, tag_frame_, tf2::TimePointZero);
+                base_frame_, tag_frame_rotated_, tf2::TimePointZero);
             
             // Convert transform to pose stamped
             geometry_msgs::msg::PoseStamped pose_stamped;
