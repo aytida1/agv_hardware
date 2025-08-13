@@ -23,7 +23,7 @@ class VelToSerial(Node):
         
         # Robot parameters
         self.wheel_radius = 0.0525  # wheel radius in meters (adjust as needed)
-        self.wheel_dist = 0.38    # distance between wheels in meters (adjust as needed)
+        self.wheel_dist = 0.3718    # distance between wheels in meters (adjust as needed)
         self.subscription = self.create_subscription(
             Twist,
             f"{self.namespace}/cmd_vel",
