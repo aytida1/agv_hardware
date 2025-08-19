@@ -162,8 +162,10 @@ def main(args=None):
         pass
     finally:
         # node.client.close()
+        node.motors.disable_motor()
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

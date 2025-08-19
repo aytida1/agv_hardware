@@ -38,7 +38,7 @@ class controlServoActionServer(Node):
             self.get_logger().info("Connection successful!")
         
         # setting velcity
-        self.motor.set_motor_velocity(1, 20)
+        self.motor.set_motor_velocity(1, 40)
         self.motor.set_motor_velocity(2, 10)
         self.motor.set_motor_velocity(3, 10)
 
@@ -50,29 +50,31 @@ class controlServoActionServer(Node):
 
         # True then first lift up and then lock
         if lift_and_lock:
-            self.lift_up()
-            time.sleep(0.5)
+            # self.lift_up()
+            # time.sleep(0.5)
             self.servo_lock()
 
         # False then first unlock and then lift down
         else:
-            self.servo_unlock()
-            time.sleep(0.5)
+            # self.servo_unlock()
+            # time.sleep(0.5)
             self.lift_down()
 
         goal_handle.succeed()
+
+        self.get_logger().info("Done!!")
 
         result = ControlServo.Result()
         result.success = True
         return result
 
     def lift_up(self):
-        target = 16000
+        target = 30000
         self.motor.motor_torque_enable(1)
         time.sleep(0.1)
         
         self.motor.set_motor_position(1, target)
-        while(self.motor.get_motor_position(1) < (target-5)):
+        while(self.motor.get_motor_position(1) < (target-100)):
             time.sleep(0.1)
             continue
 
@@ -85,7 +87,7 @@ class controlServoActionServer(Node):
         time.sleep(0.1)
         
         self.motor.set_motor_position(1, home)
-        while(self.motor.get_motor_position(1) > (home+5)):
+        while(self.motor.get_motor_position(1) > (home+100)):
             time.sleep(0.1)
             continue
         
@@ -106,8 +108,8 @@ class controlServoActionServer(Node):
             time.sleep(0.1)
             continue
         
-        self.motor.motor_torque_disable(2)
-        self.motor.motor_torque_disable(3)
+        # self.motor.motor_torque_disable(2)
+        # self.motor.motor_torque_disable(3)
         return
 
     def servo_unlock(self):
@@ -141,7 +143,8 @@ def main(args=None):
     finally:
         # node.client.close()
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 
