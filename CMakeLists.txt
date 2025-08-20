@@ -81,6 +81,7 @@ install(TARGETS
 # Install Python scripts
 install(PROGRAMS
   src/vel_cmd_to_serial.py
+  src/SM120BL_MB_motor_controller.py
   src/ZLAC8015D.py
   src/graceful_algo.py
   DESTINATION lib/${PROJECT_NAME}
