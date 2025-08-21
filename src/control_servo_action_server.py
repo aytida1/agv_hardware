@@ -90,6 +90,7 @@ class controlServoActionServer(Node):
             continue
         
         self.motor.motor_torque_disable(1)
+        return
 
     def servo_lock(self):
         servo2_target = 1300
@@ -107,6 +108,7 @@ class controlServoActionServer(Node):
         
         self.motor.motor_torque_disable(2)
         self.motor.motor_torque_disable(3)
+        return
 
     def servo_unlock(self):
         servo2_home = 300
@@ -124,4 +126,24 @@ class controlServoActionServer(Node):
         
         self.motor.motor_torque_disable(2)
         self.motor.motor_torque_disable(3)
+        return
         
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    node = controlServoActionServer()
+
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # node.client.close()
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+
+if __name__ == '__main__':
+    main()
