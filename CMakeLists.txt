@@ -16,6 +16,11 @@ find_package(sensor_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(apriltag_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "action/ControlServo.action"
+)
 
 # # Find libmodbus
 # find_library(MODBUS_LIBRARY modbus)
@@ -82,13 +87,14 @@ install(TARGETS
 install(PROGRAMS
   src/vel_cmd_to_serial.py
   src/SM120BL_MB_motor_controller.py
+  src/control_servo_action_server.py
   src/ZLAC8015D.py
   src/graceful_algo.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY
-        launch config
+        launch config 
         DESTINATION share/${PROJECT_NAME}/
 )
 
