@@ -4,100 +4,44 @@
 namespace agv_hardware
 {
 
-TagTransformNode::TagTransformNode(const rclcpp::NodeOptions & options) : rclcpp_lifecycle::LifecycleNode("tag_transform_node",options), last_warning_time_(0)
+TagTransformNode::TagTransformNode(const rclcpp::NodeOptions & options) : Node("tag_transform_node",options), last_warning_time_(0)
 {
-    
-}
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn 
-TagTransformNode::on_configure(const rclcpp_lifecycle::State &)
-{
-    RCLCPP_INFO(this->get_logger(), "In on_configure");
-    // Parameters for frame names
-    this->declare_parameter("base_frame", "map");
-    this->declare_parameter("tag_frame", "tag36h11:0");
-    // this->declare_parameter("tag_frame_rotated", "tag36h11:0_rotated");
-    this->declare_parameter("publish_rate", 10.0);
-    this->declare_parameter("warning_interval", 5.0); // Log warning every 5 seconds
-    this->declare_parameter("namespace", "");
-        
-    base_frame_ = this->get_parameter("base_frame").as_string();
-    tag_frame_ = this->get_parameter("tag_frame").as_string();
-    // tag_frame_rotated_ = this->get_parameter("tag_frame_rotated").as_string();
-    warning_interval_ = this->get_parameter("warning_interval").as_double();
-    namespace_param = this->get_parameter("namespace").as_string();
-
-    std::string topic_name = namespace_param + "/detected_dock_pose";
-    // Create publisher for detected dock pose
-    pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(topic_name, 10);
-
-    // ADD THESE TWO LINES
+    // Initialize TF2 buffer and listener
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+    // tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
+        
+        
+        
+        // Parameters for frame names
+        this->declare_parameter("base_frame", "map");
+        this->declare_parameter("tag_frame", "tag36h11:0");
+        this->declare_parameter("tag_frame_rotated", "tag36h11:0_rotated");
+        this->declare_parameter("publish_rate", 10.0);
+        this->declare_parameter("warning_interval", 5.0); // Log warning every 5 seconds
+        this->declare_parameter("namespace", "");
+        
+        base_frame_ = this->get_parameter("base_frame").as_string();
+        tag_frame_ = this->get_parameter("tag_frame").as_string();
+        tag_frame_rotated_ = this->get_parameter("tag_frame_rotated").as_string();
+        warning_interval_ = this->get_parameter("warning_interval").as_double();
+        namespace_param = this->get_parameter("namespace").as_string();
+        
+        double rate = this->get_parameter("publish_rate").as_double();
 
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
+        std::string topic_name = namespace_param + "/detected_dock_pose";
+        // Create publisher for detected dock pose
+        pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
+            topic_name, 10);
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn 
-TagTransformNode::on_activate(const rclcpp_lifecycle::State &)
-{
-    RCLCPP_INFO(this->get_logger(), "In on_activate");
-
-    // The publisher is automatically activated when the node is.
-    pose_publisher_->on_activate();
-
-    double rate = this->get_parameter("publish_rate").as_double();
-    timer_ = this->create_wall_timer(
+        timer_ = this->create_wall_timer(
             std::chrono::milliseconds(static_cast<int>(1000.0 / rate)),
             std::bind(&TagTransformNode::publish_transform, this));
-    
-    RCLCPP_INFO(this->get_logger(), "Tag Transform Node is now active and publishing.");
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+        
+        RCLCPP_INFO(this->get_logger(), "Tag Transform Node started");
+        RCLCPP_INFO(this->get_logger(), "Publishing transform from %s to %s on /detected_dock_pose", 
+                   base_frame_.c_str(), tag_frame_.c_str());
 }
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TagTransformNode::on_deactivate(const rclcpp_lifecycle::State &)
-{
-    RCLCPP_INFO(this->get_logger(), "In on_deactivate");
-    
-    // Stop the timer by resetting it.
-    timer_.reset();
-    
-    // The publisher is automatically deactivated.
-    pose_publisher_->on_deactivate();
-
-    RCLCPP_INFO(this->get_logger(), "Tag Transform Node is now inactive.");
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TagTransformNode::on_cleanup(const rclcpp_lifecycle::State &)
-{
-    RCLCPP_INFO(this->get_logger(), "In on_cleanup");
-    
-    // Release all resources.
-    timer_.reset();
-    pose_publisher_.reset();
-    tf_listener_.reset();
-    tf_buffer_.reset();
-    
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TagTransformNode::on_shutdown(const rclcpp_lifecycle::State &)
-{
-    RCLCPP_INFO(this->get_logger(), "In on_shutdown");
-    
-    // Clean up resources.
-    timer_.reset();
-    pose_publisher_.reset();
-    tf_listener_.reset();
-    tf_buffer_.reset();
-    
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
-
 
 void TagTransformNode::publish_transform()
 {
@@ -170,6 +114,7 @@ void TagTransformNode::publish_transform()
             }
         }
     }
+
 };
 
 RCLCPP_COMPONENTS_REGISTER_NODE(agv_hardware::TagTransformNode)
