@@ -31,6 +31,10 @@ TagTransformNode::on_configure(const rclcpp_lifecycle::State &)
     // Create publisher for detected dock pose
     pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(topic_name, 10);
 
+    // ADD THESE TWO LINES
+    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 

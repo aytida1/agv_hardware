@@ -19,7 +19,7 @@ def generate_launch_description():
         name='camera_container',
         namespace=namespace_string,
         package='rclcpp_components',
-        executable='component_container',
+        executable='component_container_isolated',
         composable_node_descriptions=[
             ComposableNode(
                 package='usb_cam',
