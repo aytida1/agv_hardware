@@ -10,6 +10,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle)
 find_package(rclpy REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -64,7 +65,7 @@ target_include_directories(tag_transform_component PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(tag_transform_component rclcpp_components rclcpp geometry_msgs tf2_ros tf2 tf2_geometry_msgs apriltag_msgs)
+ament_target_dependencies(tag_transform_component rclcpp_components rclcpp rclcpp_lifecycle geometry_msgs tf2_ros tf2 tf2_geometry_msgs apriltag_msgs)
 
 # Register as composable node and create executable
 rclcpp_components_register_node(

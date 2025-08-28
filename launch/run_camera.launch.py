@@ -15,7 +15,6 @@ def generate_launch_description():
     
     
     camera_info_path = os.path.join(get_package_share_directory("agv_hardware"), 'config', 'camera_info.yaml')
-    print(camera_info_path)
     container = ComposableNodeContainer(
         name='camera_container',
         namespace=namespace_string,

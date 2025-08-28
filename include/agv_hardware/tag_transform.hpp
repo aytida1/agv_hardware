@@ -2,6 +2,7 @@
 #define AGV_HARDWARE__TAG_TRANSFORM_HPP_
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2/LinearMath/Quaternion.h>
@@ -16,7 +17,7 @@
 namespace agv_hardware
 {
 
-class TagTransformNode : public rclcpp::Node
+class TagTransformNode : public rclcpp_lifecycle::LifecycleNode
 {
 public:
     /**
@@ -30,6 +31,11 @@ private:
      * @brief Callback function to publish transform data
      * Gets transform from base frame to tag frame and publishes as PoseStamped
      */
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
     void publish_transform();
     
     // TF2 components
@@ -37,14 +43,14 @@ private:
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     
     // Publisher and timer
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
-    std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
+    rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_publisher_;
+    // std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
     rclcpp::TimerBase::SharedPtr timer_;
     
     // Frame names
     std::string base_frame_;
     std::string tag_frame_;
-    std::string tag_frame_rotated_;
+    // std::string tag_frame_rotated_;
     std::string namespace_param;
     
     // Warning throttling
