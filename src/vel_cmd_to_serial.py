@@ -52,7 +52,7 @@ class VelToSerial(Node):
         # cmds = [140, 170]
         #cmds = [100, 50]
         #cmds = [150, -100]
-        self.odom_timer = 0.067  # Hz
+        self.odom_timer = 1.0/30.0  # Hz
         self.timer = self.create_timer(self.odom_timer, self.timer_callback)
         self.x = 0.0
         self.y = 0.0
@@ -123,9 +123,11 @@ class VelToSerial(Node):
         linear_velocity = (self.wheel_radius / 2) * (radpsL + radpsR)
         angular_velocity = (self.wheel_radius / self.wheel_dist) * (radpsL - radpsR)
 
+        now = self.get_clock().now().to_msg()
+
         # create odometry message
         odom_msg = Odometry()
-        odom_msg.header.stamp = self.get_clock().now().to_msg()
+        odom_msg.header.stamp = now
         odom_msg.header.frame_id = f"{self.namespace}/odom"
         odom_msg.child_frame_id = f"{self.namespace}/base_link"
         odom_msg.pose.pose.position.x = self.x
@@ -145,7 +147,7 @@ class VelToSerial(Node):
 
         # create transform stamped message
         transform = TransformStamped()
-        transform.header.stamp = odom_msg.header.stamp  # keep eye on it
+        transform.header.stamp = now # keep eye on it
         transform.header.frame_id = f"{self.namespace}/odom"
         transform.child_frame_id = f"{self.namespace}/base_link"
 
@@ -162,7 +164,7 @@ class VelToSerial(Node):
 
         # joint states
         joint_msg = JointState()
-        joint_msg.header.stamp = self.get_clock().now().to_msg()
+        joint_msg.header.stamp = now
         joint_msg.name = [
             f"{self.namespace}/base_left_wheel_joint",
             f"{self.namespace}/base_right_wheel_joint",

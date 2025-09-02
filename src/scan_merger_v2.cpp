@@ -114,7 +114,7 @@ std::vector<std::pair<float, float>> ScanMergerV2::laserscan_to_point(const sens
             base_frame_,
             lidar_frame,
             // scan_msg->header.stamp,
-            rclcpp::Time(0), // Request the latest available transform
+            rclcpp::Time(scan_msg->header.stamp), // Request the latest available transform
             rclcpp::Duration::from_seconds(0.1)  // Increased timeout for better reliability
         );
 
@@ -179,7 +179,7 @@ void ScanMergerV2::process_and_publish_scans(){
         sync_time = rclcpp::Time(scan2_->header.stamp);
     }
 
-    sync_time = sync_time - rclcpp::Duration::from_seconds(0.0);  // 0.1 seconds = 100ms
+    // sync_time = sync_time - rclcpp::Duration::from_seconds(0.0);  // 0.1 seconds = 100ms
     std::vector<std::pair<float, float>> points1, points2;
     
     // Process scan1 if available
@@ -216,8 +216,8 @@ void ScanMergerV2::process_and_publish_scans(){
     combined_scan.angle_max = angle_max_;
     combined_scan.range_min = 0.26;
     combined_scan.range_max = max_range_;
-    combined_scan.scan_time = 0.01;  // Faster scan time for reduced latency
-    combined_scan.time_increment = 0.0;
+    combined_scan.scan_time = scan1_->scan_time;  // Faster scan time for reduced latency
+    combined_scan.time_increment = scan1_->time_increment;
 
     // Initialize ranges array with inf
     combined_scan.ranges.assign(num_points_, std::numeric_limits<float>::infinity());
