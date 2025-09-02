@@ -169,15 +169,15 @@ void ScanMergerV2::process_and_publish_scans(){
 
     // Use the most recent available timestamp
     rclcpp::Time sync_time = this->get_clock()->now();
-    if (scan1_ && scan2_) {
-        rclcpp::Time time1(scan1_->header.stamp);
-        rclcpp::Time time2(scan2_->header.stamp);
-        sync_time = (time1 > time2) ? time1 : time2;
-    } else if (scan1_) {
-        sync_time = rclcpp::Time(scan1_->header.stamp);
-    } else if (scan2_) {
-        sync_time = rclcpp::Time(scan2_->header.stamp);
-    }
+    // if (scan1_ && scan2_) {
+    //     rclcpp::Time time1(scan1_->header.stamp);
+    //     rclcpp::Time time2(scan2_->header.stamp);
+    //     sync_time = (time1 > time2) ? time1 : time2;
+    // } else if (scan1_) {
+    //     sync_time = rclcpp::Time(scan1_->header.stamp);
+    // } else if (scan2_) {
+    //     sync_time = rclcpp::Time(scan2_->header.stamp);
+    // }
 
     // sync_time = sync_time - rclcpp::Duration::from_seconds(0.0);  // 0.1 seconds = 100ms
     std::vector<std::pair<float, float>> points1, points2;
