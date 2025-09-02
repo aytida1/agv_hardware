@@ -114,7 +114,7 @@ std::vector<std::pair<float, float>> ScanMergerV2::laserscan_to_point(const sens
             base_frame_,
             lidar_frame,
             // scan_msg->header.stamp,
-            rclcpp::Time(0), // Request the latest available transform
+            rclcpp::Time(scan_msg->header.stamp), // Request the latest available transform
             rclcpp::Duration::from_seconds(0.1)  // Increased timeout for better reliability
         );
 
@@ -179,7 +179,7 @@ void ScanMergerV2::process_and_publish_scans(){
         sync_time = rclcpp::Time(scan2_->header.stamp);
     }
 
-    sync_time = sync_time - rclcpp::Duration::from_seconds(0.0);  // 0.1 seconds = 100ms
+    // sync_time = sync_time - rclcpp::Duration::from_seconds(0.0);  // 0.1 seconds = 100ms
     std::vector<std::pair<float, float>> points1, points2;
     
     // Process scan1 if available
