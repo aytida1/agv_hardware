@@ -173,7 +173,7 @@ class VelToSerial(Node):
         joint_msg.position = [angleL, angleR, 0.0, 0.0, 0.0]
         joint_msg.velocity = []
         joint_msg.effort = []
-        self.wheel_joint_publisher(joint_msg)
+        self.wheel_joint_publisher.publish(joint_msg)
 
 
 def main(args=None):
