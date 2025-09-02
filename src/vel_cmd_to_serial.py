@@ -5,6 +5,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, TransformStamped
 from tf2_ros import TransformBroadcaster
+from sensor_msgs.msg import JointState
 
 import math
 from nav_msgs.msg import Odometry
@@ -30,6 +31,8 @@ class VelToSerial(Node):
             self.cmd_vel_callback,
             10)
         self.odom_publisher = self.create_publisher(Odometry, f"{self.namespace}/odom", 10)
+
+        self.wheel_joint_publisher = self.create_publisher(JointState, f"{self.namespace}/joint_states", 10)
 
         self.tf_broadcaster = TransformBroadcaster(self)
         # self.client = ModbusClient(port='/dev/ttyUSB0', baudrate=115200, timeout=1)
@@ -100,6 +103,9 @@ class VelToSerial(Node):
         radpsL = -rpmL*2*math.pi/60
         radpsR = rpmR*2*math.pi/60
 
+        angleL = radpsL * self.odom_timer
+        angleR = radpsR * self.odom_timer
+
         #calculate distance travelled by each wheel
         left_distance = radpsL * self.wheel_radius * self.odom_timer
         right_distance = radpsR * self.wheel_radius * self.odom_timer
@@ -151,6 +157,23 @@ class VelToSerial(Node):
 
         #publish the transform
         self.tf_broadcaster.sendTransform(transform)
+
+
+
+        # joint states
+        joint_msg = JointState()
+        joint_msg.header.stamp = self.get_clock().now().to_msg()
+        joint_msg.name = [
+            f"{self.namespace}/base_left_wheel_joint",
+            f"{self.namespace}/base_right_wheel_joint",
+            f"{self.namespace}/lift_base_joint",
+            f"{self.namespace}/lift_servo_motor_left_joint",
+            f"{self.namespace}/lift_servo_motor_right_joint"
+        ]
+        joint_msg.position = [angleL, angleR, 0.0, 0.0, 0.0]
+        joint_msg.velocity = []
+        joint_msg.effort = []
+        self.wheel_joint_publisher(joint_msg)
 
 
 def main(args=None):
